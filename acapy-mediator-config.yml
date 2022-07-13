@@ -1,0 +1,32 @@
+# Admin
+admin: [0.0.0.0, 8000]
+
+# Transport
+inbound-transport:
+  - [ws, 0.0.0.0, 9000]
+  - [http, 0.0.0.0, 9001]
+outbound-transport:
+  - http
+  - ws
+
+# Ledger
+no-ledger: true
+
+# Connections
+auto-accept-invites: true
+auto-accept-requests: true
+auto-ping-connection: true
+invite-multi-use: true
+
+# Wallet
+wallet-type: indy
+auto-provision: true
+
+# Enable undelivered queue
+# Important for communication with toolbox over http (as opposed to ws)
+enable-undelivered-queue: true
+open-mediation: true
+
+# Print an admin invite
+connections-invite: true
+invite-label: "Mediator"

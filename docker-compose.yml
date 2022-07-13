@@ -1,0 +1,65 @@
+version: "3.5"
+
+services:
+  # Proxy
+  caddy:
+    image: caddy
+    hostname: caddy
+    networks:
+      - mediator-network
+    ports:
+       - "2015:2015"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    healthcheck:
+      # Port 2019 is an internal Caddy admin port.
+      test: nc -zv localhost:2019 || exit -1
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  # Mediator Service
+  mediator:
+    image: bcgovimages/aries-cloudagent:py36-1.16-1_0.7.3
+    networks:
+      - mediator-network
+    depends_on:
+      - database
+    env_file:
+      - .env
+    environment:
+      ACAPY_LABEL: Mediator
+      ACAPY_WALLET_STORAGE_CONFIG: '{"url":"database:5432","wallet_scheme":"DatabasePerWallet"}'
+      ACAPY_WALLET_STORAGE_CREDS: ${WALLET_STORAGE_CONFIG}
+      ACAPY_ADMIN_API_KEY: ${ADMIN_API_KEY}
+      ACAPY_WALLET_NAME: ${WALLET_NAME}
+      ACAPY_WALLET_KEY: ${WALLET_KEY}
+    volumes:
+      - ./acapy-mediator-config.yml:/config.yml
+    ports:
+      - "8000:8000"
+      - "9000"
+      - "9001"
+    command: >-
+      start --arg-file /config.yml --endpoint ${HTTP_URL} ${WS_URL}
+
+  # DB Service
+  database:
+    image: postgres:10
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432"
+    networks:
+      - mediator-network
+    volumes:
+      - mediator-db-storage:/var/lib/pgsql/data
+
+volumes:
+  mediator-db-storage:
+
+networks:
+  mediator-network:
+
+
